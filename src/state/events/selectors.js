@@ -16,20 +16,21 @@ export const getEvents = state => state.events.allEvents;
 export const getColorMap = state => state.events.filterColors;
 export const getCurrentIssueFocuses = state => (['2020 Candidate Event']);
 
-const getEventsFilteredByKeywordArray = createSelector(
-  [getEvents, getFilters],
-  (allEvents, filterArray) => {
-    return filter(allEvents, o => includes(filterArray, o.issueFocus));
-  },
-);
+// const getEventsFilteredByKeywordArray = createSelector(
+//   [getEvents, getFilters],
+//   (allEvents, filterArray) => {
+//     return filter(allEvents, o => includes(filterArray, o.issueFocus));
+//   },
+// );
 
 const getEventsInState = createSelector(
-  [getEventsFilteredByKeywordArray, getSelectedState],
-  (eventsFilteredByKeywords, usState) => {
+  [getEvents, getSelectedState],
+  (allEvents, usState) => {
+    return allEvents
     if (!usState) {
-      return eventsFilteredByKeywords;
+      return allEvents;
     }
-    return eventsFilteredByKeywords.filter(currrentEvent => currrentEvent.state === usState);
+    return allEvents.filter(currrentEvent => currrentEvent.state === usState);
   },
 );
 
@@ -40,19 +41,21 @@ export const getFilteredEvents = createSelector(
     getFilterValue,
   ],
   (
-    eventsFilteredByKeywords,
+    eventsInState,
     filterBy,
     filterValue,
   ) => {
+    console.log(eventsInState)
+    return eventsInState;
     if (!filterValue || filterBy === 'all') {
-      return eventsFilteredByKeywords;
+      return eventsInState;
     }
-    return eventsFilteredByKeywords.filter((currrentEvent) => {
+    return eventsInState.filter((currrentEvent) => {
       if (!currrentEvent[filterBy]) {
         return false;
       }
       return currrentEvent[filterBy].toLowerCase().includes(filterValue.toLowerCase());
-    }).sort((a, b) => (a.starts_at < b.starts_at ? -1 : 1));
+    }).sort((a, b) => (a.dateObj < b.dateObj ? -1 : 1));
   },
 );
 
@@ -67,6 +70,7 @@ export const getVisbleEvents = createSelector(
     maxDistance,
     location,
   ) => {
+    return filteredEvents;
     if (!location.LAT) {
       return filteredEvents;
     }
@@ -101,6 +105,8 @@ export const getEventsByDistrict = createSelector(
     filteredEvents,
     district,
   ) => {
+    return filteredEvents;
+
     if (district.toString().length === 0) {
       return filteredEvents;
     }

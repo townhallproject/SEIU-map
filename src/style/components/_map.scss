@@ -27,6 +27,33 @@
   }
 }
 
+#map {
+  min-height: 80vh;
+  margin: 4vh 0;
+
+  &.leaflet-container {
+    background-color: rgba(0, 0, 0, 0.0);
+  }
+
+  .leaflet-tooltip {
+    .tooltip-container {
+      min-width: 200px;
+    }
+
+    .response {
+      padding-left: 0.5em;
+      padding-right: 0.5em;
+      text-align: right;
+    }
+
+    .subtitle {
+      color: ligten(red, 80%);
+      font-size: .6em;
+      border-bottom: 0.5px solid ligten(red, 50%);
+    }
+  }
+
+}
 /**
 * Set rules for how the map overlays
 * (info box and legend) will be displayed

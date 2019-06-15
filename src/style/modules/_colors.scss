@@ -1,10 +1,10 @@
-$brand-primary: #2e4c69;
+$brand-primary: #6e25fb;
 
-$brand-blue: #7bc0e1;
+$brand-secondary: #f7ed54;
 
-$brand-red: #CA4948;
+$light-text: #8492a5;
 
-$main-dark-blue: #2D4C6B;
+$dark-text: #3c4857;
 
 $main-light-blue: #6C9FC2;
 
@@ -17,40 +17,25 @@ $dark-purple: #3E1A49;
 $dark-orange: #DB8011;
 
 /* Issue Colors */
-$other: $main-dark-blue;
+$other: $dark-text;
 
 $general: $main-light-blue;
 
-$dream-act: $brand-red;
-
-$infrastructure: #172636;
-
-$trump-tax-scam: #365061;
-
-$electoral: #652524;
-
-$town-hall: #4E937A;
-
-$gun-violence: #7B3491;
-
-$foreign-policy: #FF9F2C;
-
+$town-hall: #6e25fb;
 /* Search bar & filter by color */
-$search-border: $main-dark-blue;
+$search-border: $dark-text;
 
-$filter-by-slider: $main-dark-blue;
+$filter-by-slider: $dark-text;
 
 /* Groups */
 
 $group-dot: $main-light-blue;
 
-$group-dot-hover: $brand-red;
+$group-info-box: $dark-text;
 
-$group-info-box: $main-dark-blue;
+$group-header : $dark-text;
 
-$group-header : $main-dark-blue;
-
-$contact-icons: $main-dark-blue;
+$contact-icons: $dark-text;
 
 /* Events */
 

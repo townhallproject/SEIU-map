@@ -1,15 +1,47 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import geoViewport from '@mapbox/geo-viewport';
+
 import {
   find,
   filter,
 } from 'lodash';
-import geoViewport from '@mapbox/geo-viewport';
 import bboxes from '../data/bboxes';
 import Point from '../logics/features';
 import states from '../data/states';
 
+import L from '../utils/leaflet-ajax/src';
+
 import MapInset from '../components/MapInset';
+
+// Static Dicts
+const responseDict = {
+  1: 'Supports Special Counsel Independence and Integrity Act',
+  2: 'Supports Other Action',
+  3: 'Opposes Special Counsel Independence and Integrity Act',
+  4: 'Not on record',
+};
+
+const responseDictPopover = {
+  1: 'supports bill',
+  2: 'for other action(s)',
+  3: 'opposes bill',
+  4: 'unknown',
+};
+
+const responseClass = {
+  1: 'support',
+  2: 'action',
+  3: 'oppose',
+  4: 'unknown',
+};
+
+const mapColors = {
+  1: '#542788',
+  2: '#998ec3',
+  3: '#f1a340',
+  4: '#e3e3e3',
+};
 
 class MapView extends React.Component {
   constructor(props) {
@@ -29,7 +61,7 @@ class MapView extends React.Component {
     this.removeHighlights = this.removeHighlights.bind(this);
     this.filterForStateInsets = this.filterForStateInsets.bind(this);
     this.insetOnClickEvent = this.insetOnClickEvent.bind(this);
-    this.makeZoomToNationalButton = this.makeZoomToNationalButton.bind(this);
+    // this.makeZoomToNationalButton = this.makeZoomToNationalButton.bind(this);
     this.state = {
       alaskaItems: filter(this.props.items, { state: 'AK' }),
       hawaiiItems: filter(this.props.items, { state: 'HI' }),
@@ -195,10 +227,6 @@ class MapView extends React.Component {
       type,
       refcode,
     } = this.props;
-    const popup = new mapboxgl.Popup({
-      closeButton: true,
-      closeOnClick: true,
-    });
 
     map.on('mousemove', (e) => {
       const features = map.queryRenderedFeatures(e.point, { layers: [layer] });
@@ -313,34 +341,31 @@ class MapView extends React.Component {
   }
 
   addLayer(featuresHome) {
-    this.map.addLayer(
-      {
-        id: 'events-points',
-        layout: {
-          'icon-allow-overlap': true,
-          'icon-ignore-placement': true,
-          'icon-image': '{icon}',
-          'icon-offset': {
-            base: 1,
-            stops: [
-              [0, [0, -15]],
-              [10, [0, -10]],
-              [12, [0, 0]],
-            ],
-          },
-          'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
-        },
-        paint: {
-          'icon-opacity': 1,
-        },
-        source: {
-          data: featuresHome,
-          type: 'geojson',
-        },
-        type: 'symbol',
+    const myIcon = L.icon({
+      iconUrl: './assets/campaign.svg',
+      iconSize: [24, 24],
+      iconAnchor: [0, -10],
+        // 'base': 1,
+        // 'stops': [
+        //   [0, [0, -15]],
+        //   [10, [0, -10]],
+        //   [12, [0, 0]]
+        // ]
+      
+      popupAnchor: [-3, -76],
+    });
+    L.geoJSON(featuresHome, {
+      pointToLayer(geoJsonPoint, latlng) {
+        return L.marker(latlng, {
+          icon: myIcon,
+        });
       },
-      'district_interactive',
-    );
+      style(feature) {
+        return {
+          color: '#f7ed54',
+        };
+      },
+    }).bindPopup((layer) => layer.feature.properties.events).addTo(this.map);
   }
 
   clusterData(featuresHome) {
@@ -401,57 +426,120 @@ class MapView extends React.Component {
   }
 
   // Creates the button in our zoom controls to go to the national view
-  makeZoomToNationalButton() {
-    const {
-      selectedUsState,
-    } = this.props;
-    document.querySelector('.mapboxgl-ctrl-compass').remove();
-    if (document.querySelector('.mapboxgl-ctrl-usa')) {
-      document.querySelector('.mapboxgl-ctrl-usa').remove();
-    }
-    const usaButton = document.createElement('button');
-    usaButton.className = 'mapboxgl-ctrl-icon mapboxgl-ctrl-usa';
-    if (selectedUsState) {
-      usaButton.innerHTML = `<span>${selectedUsState}</span>`;
-    } else {
-      usaButton.innerHTML = '<span class="usa-icon"></span>';
-    }
-    usaButton.addEventListener('click', this.handleReset);
-    document.querySelector('.mapboxgl-ctrl-group').appendChild(usaButton);
-  }
+  // makeZoomToNationalButton() {
+  //   const {
+  //     selectedUsState,
+  //   } = this.props;
+  //   document.querySelector('.mapboxgl-ctrl-compass').remove();
+  //   if (document.querySelector('.mapboxgl-ctrl-usa')) {
+  //     document.querySelector('.mapboxgl-ctrl-usa').remove();
+  //   }
+  //   const usaButton = document.createElement('button');
+  //   usaButton.className = 'mapboxgl-ctrl-icon mapboxgl-ctrl-usa';
+  //   if (selectedUsState) {
+  //     usaButton.innerHTML = `<span>${selectedUsState}</span>`;
+  //   } else {
+  //     usaButton.innerHTML = '<span class="usa-icon"></span>';
+  //   }
+  //   usaButton.addEventListener('click', this.handleReset);
+  //   document.querySelector('.mapboxgl-ctrl-group').appendChild(usaButton);
+  // }
 
   initializeMap(featuresHome) {
-    const { type, searchType } = this.props;
+    const { items } = this.props;
+    function calculateZoom() {
+      const sw = screen.width;
+      return sw >= 1700 ? 4.0 :
+        sw >= 1600 ? 3.11 :
+          3.11;
+    }
 
-    mapboxgl.accessToken =
-      'pk.eyJ1IjoibWF5YXlhaXIiLCJhIjoiY2phdWl3Y2dnNWM0djJxbzI2M3l6ZHpmNSJ9.m00H0mS_DpchMFMbQ72q2w';
-    const styleUrl = 'mapbox://styles/mayayair/cjd14wlhs0abt2sp8o10s64el';
+    function setStyle(state) {
+      return {
+        color: '#6e6e6e',
+        fillColor: '#f6f4f4',
+        fillOpacity: 1,
+        opacity: 0.2,
+        weight: 1,
+      };
+    }
+    var continentalView = function (w, h) {
+        // if (stateCoords) {
+        //   return geoViewport.viewport(stateCoords, [w, h]);
+        // } else {
+          return geoViewport.viewport([-128.8, 23.6, -65.4, 50.2], [w, h]);
+      // }
+    }
 
-    this.map = new mapboxgl.Map({
-      container: 'map',
-      style: styleUrl,
+    function setStateStyle(state) {
+      return {
+        color: state.properties.events ? '#fff' : '#fff',
+        fillColor: state.properties.events ? '#6e00ff' : '#f6f4f4',
+        fillOpacity: 1,
+        opacity: 1,
+        weight: state.properties.events ? 2 : 0.5,
+      };
+    }
+
+    const maxBounds = [
+      [24, -128], // Southwest
+      [50, -60.885444], // Northeast
+    ];
+   var continental = continentalView(window.innerWidth / 2, window.innerHeight / 2);
+    console.log(continental)
+    this.map = L.map('map', {
+      // attributionControl: false,
+      // zoomControl: false,
+      zoom: 4,
+      center: [36.900000000000006, -97.10000000000001],
+      maxBounds,
+    })
+
+    var mapboxAccessToken = 'pk.eyJ1IjoidG93bmhhbGxwcm9qZWN0IiwiYSI6ImNqMnRwOG4wOTAwMnMycG1yMGZudHFxbWsifQ.FXyPo3-AD46IuWjjsGPJ3Q'
+
+
+
+    function addEventToState(statesGeoJson) {
+      statesGeoJson.features.forEach((state) => {
+        state.properties.events = find(items, item => item.state === state.properties.ABR);
+      });
+
+      return statesGeoJson;
+    }
+
+    // Set map controls
+    function showTooltip(e) {
+      let tooltip =
+          `<div class="tooltip-container"><div class="d-flex justify-content-between"><h4 class="title">${e.feature.properties.DISTRICT}</h4><h4>Position</h4></div>`;
+      tooltip += '<div class="subtitle">HOUSE</div>';
+      // tooltip += makeRow(e.feature.properties.MoCs[0].displayName, e.feature.properties.MoCs[0].crisis_status);
+      tooltip += '<div class="subtitle">SENATE</div>';
+      tooltip += '</div>';
+      return tooltip;
+    }
+    // this.makeZoomToNationalButton();
+    // this.map.dragging.disable();
+    // this.map.touchZoom.disable();
+    // this.map.doubleClickZoom.disable();
+    // this.map.scrollWheelZoom.disable();
+
+    const districtLayer = new L.GeoJSON.AJAX('../data/districts.geojson', {
+      // middleware: addMoCsToDistrict,
+      style(state) {
+        return setStyle(state);
+      },
     });
 
-    // Set Mapbox map controls
-    this.map.addControl(new mapboxgl.NavigationControl());
-    this.map.scrollZoom.disable();
-    this.map.dragRotate.disable();
-    this.map.touchZoomRotate.disableRotation();
-    this.makeZoomToNationalButton();
-    this.map.metadata = {
-      searchType,
-    };
-    // map on 'load'
-    this.map.on('load', () => {
-      if (type === 'events') {
-        this.addLayer(featuresHome);
-        this.addPopups('events-points');
-        this.map.getSource('events-points').setData(featuresHome);
-      } else {
-        this.addPopups('unclustered-point');
-        this.clusterData(featuresHome);
-      }
+    const stateLayer = new L.GeoJSON.AJAX('../data/states.geojson', {
+      middleware: addEventToState,
+      style(state) {
+        return setStateStyle(state);
+      },
     });
+    // districtLayer.addTo(this.map);
+    stateLayer.addTo(this.map);
+
+    this.addLayer(featuresHome);
   }
 
   render() {
@@ -475,7 +563,7 @@ class MapView extends React.Component {
       <React.Fragment>
         <div id="map" className={this.state.popoverColor}>
           <div className="map-overlay" id="legend">
-            <MapInset
+            {/* <MapInset
               items={this.state.alaskaItems}
               selectedUsState={selectedUsState}
               center={center}
@@ -514,7 +602,7 @@ class MapView extends React.Component {
               bounds={[
                 [-161.03759765625, 18.542116654448996],
                 [-154.22607421875, 22.573438264572406]]}
-            />
+            /> */}
           </div>
         </div>
 

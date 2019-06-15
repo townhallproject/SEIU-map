@@ -23,6 +23,7 @@ const initialState = {
 const eventsReducer = (state = initialState, action) => {
   switch (action.type) {
     case 'SET_EVENTS':
+      console.log(action.events)
       return {
         ...state,
         allEvents: [...state.allEvents, ...action.events],

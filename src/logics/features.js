@@ -1,24 +1,22 @@
 import moment from 'moment';
 
 class Point {
-  constructor(eventOrGroup) {
+  constructor(townHall) {
     this.type = 'Feature';
     this.geometry = {
-      coordinates: [Number(eventOrGroup.longitude), Number(eventOrGroup.latitude)],
+      coordinates: [Number(townHall.lng), Number(townHall.lat)],
       type: 'Point',
     };
     this.properties = {
-      address: eventOrGroup.address1 || eventOrGroup.city,
-      district: eventOrGroup.title.split('-'),
-      icon: eventOrGroup.icon || 'other-icon',
-      id: eventOrGroup.id || null,
-      rsvpHref: eventOrGroup.rsvpHref || null,
-      socials: eventOrGroup.socials || [],
-      startsAt: eventOrGroup.starts_at ? moment(eventOrGroup.starts_at).format('MMMM Do YYYY, h:mm a') : '',
-      state: eventOrGroup.state || null,
-      title: eventOrGroup.title || eventOrGroup.name,
-      url: eventOrGroup.url || null,
-      venue: eventOrGroup.venue || '',
+      address: townHall.address,
+      district: townHall.district,
+      icon: townHall.iconFlag,
+      id: townHall.id || null,
+      startsAt: townHall.starts_at ? moment(townHall.starts_at).format('MMMM Do YYYY, h:mm a') : '',
+      state: townHall.state || null,
+      title: townHall.eventName,
+      url: townHall.url || null,
+      venue: townHall.Location || '',
     };
   }
 }

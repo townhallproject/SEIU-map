@@ -56,54 +56,13 @@
   margin-bottom: 0.5rem;
 }
 
-.popover-other-icon {
-  .mapboxgl-popup-content {
-    @include popover($other);
-  }
-  @include popover-tip($other);
-}
-.popover-general-icon {
-  .mapboxgl-popup-content {
-    @include popover($general);
-  }
-  @include popover-tip($general);
-}
 .popover-town-hall-icon {
   .mapboxgl-popup-content {
     @include popover($town-hall);
   }
   @include popover-tip($town-hall);
 }
-.popover-gun-violence-icon {
-  .mapboxgl-popup-content {
-    @include popover($gun-violence);
-  }
-  @include popover-tip($gun-violence);
-}
-.popover-dream-act-icon {
-  .mapboxgl-popup-content {
-    @include popover($dream-act);
-  }
-  @include popover-tip($dream-act);
-}
-.popover-infrastructure-icon {
-  .mapboxgl-popup-content {
-    @include popover($infrastructure);
-  }
-  @include popover-tip($infrastructure);
-}
-.popover-electoral-icon {
-  .mapboxgl-popup-content {
-    @include popover($electoral);
-  }
-  @include popover-tip($electoral);
-}
-.popover-foreign-policy-icon {
-  .mapboxgl-popup-content {
-    @include popover($foreign-policy);
-  }
-  @include popover-tip($foreign-policy);
-}
+
 .popover-dark-green {
   .mapboxgl-popup-content {
     @include popover($dark-green);

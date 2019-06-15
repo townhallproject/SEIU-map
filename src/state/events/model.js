@@ -1,26 +1,20 @@
-const campaignMapping = {
-  15: 'local-actions',
-  19: 'mobilizeamerica-public-events',
-  21: 'save-scotus-actions',
-  9: 'recess-townhall',
-};
-
-export default class IndEvent {
+export default class TownHall {
   constructor(props) {
-    Object.assign(this, props);
-    this.rsvpHref = this.makeUrl();
+    this.displayName = props.displayName;
+    this.address = props.address;
+    this.starts_at = props.dateString;
+    this.id = props.eventId;
+    this.iconFlag = props.iconFlag;
+    this.chamber = props.chamber;
+    this.lat = props.lat;
+    this.lng = props.lng;
+    this.eventName = props.eventName;
+    this.Location = props.Location;
+    this.dateObj = props.dateObj;
+    this.state = props.state;
   }
 
   makeUrl() {
-    if (this.displayAltLink) {
-      return this.linkToInfo;
-    }
-    if (campaignMapping[this.campaignNo] === 'mobilizeamerica-public-events' && this.linkToInfo) {
-      return this.linkToInfo;
-    }
-    const arr = this.campaign.split('/');
-    const campaignNumber = arr[arr.length - 2];
-    const campaignName = campaignMapping[campaignNumber] || 'local-actions';
-    return `http://act.indivisible.org/event/${campaignName}/${this.id}/signup/`;
+    return;
   }
 }

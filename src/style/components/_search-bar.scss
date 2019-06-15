@@ -75,9 +75,6 @@
 .search-type-switch.ant-switch {
   background-color: $brand-primary;
 }
-.search-type-switch.ant-switch-checked {
-  background-color: $brand-red;
-}
 
 
 .input-group__item {
@@ -100,38 +97,6 @@ select {
 .ant-tag-checkable-checked {
   &.town-hall-icon {
     background-color: $town-hall;
-  }
-
-  &.general-icon {
-    background-color: $general;
-  }
-
-  &.other-icon {
-    background-color: $other;
-  }
-
-  &.gun-violence-icon {
-    background-color: $gun-violence;
-  }
-
-  &.foreign-policy-icon {
-    background-color: $foreign-policy;
-  }
-
-  &.infrastructure-icon {
-    background-color: $infrastructure;
-  }
-
-  &.trump-tax-scam-icon {
-    background-color: $trump-tax-scam;
-  }
-
-  &.dream-act-icon {
-    background-color: $dream-act;
-  }
-
-  &.electoral-icon {
-    background-color: $electoral;
   }
 
   &.dark-green {

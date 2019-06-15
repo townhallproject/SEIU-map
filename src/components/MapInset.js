@@ -228,9 +228,9 @@ class MapInset extends React.Component {
       stateName,
     } = this.props;
 
-    mapboxgl.accessToken =
-        'pk.eyJ1IjoibWF5YXlhaXIiLCJhIjoiY2phdWl3Y2dnNWM0djJxbzI2M3l6ZHpmNSJ9.m00H0mS_DpchMFMbQ72q2w';
-    const styleUrl = 'mapbox://styles/mayayair/cjd14wlhs0abt2sp8o10s64el';
+    // mapboxgl.accessToken =
+    //     'pk.eyJ1IjoibWF5YXlhaXIiLCJhIjoiY2phdWl3Y2dnNWM0djJxbzI2M3l6ZHpmNSJ9.m00H0mS_DpchMFMbQ72q2w';
+    // const styleUrl = 'mapbox://styles/mayayair/cjd14wlhs0abt2sp8o10s64el';
 
     this.map = new mapboxgl.Map({
       container: mapId,

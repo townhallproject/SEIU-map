@@ -8,7 +8,7 @@
   .read-more {
     transition: max-height 500ms ease-in-out;
     cursor: pointer;
-    color: $brand-blue;
+    color: $brand-primary;
     &.closed{
       max-height: 4em;
       text-overflow: ellipsis;

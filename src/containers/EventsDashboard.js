@@ -47,47 +47,15 @@ class EventsDashboard extends React.Component {
     };
   }
 
-  componentWillMount() {
-    const {
-      setRefCode,
-      setUsState,
-    } = this.props;
-
-    if (document.location.search) {
-      setRefCode(document.location.search);
-    }
-    // const query = document.location.search.match(new RegExp('([?&])issue-filter[^&]*'));
-
-    const params = ['location', 'issue-filter'];
-    const queries = params.reduce((acc, cur) => {
-      const query = document.location.search.match(new RegExp(`[?&]${cur}[^&]*`));
-      if (query && query[0].split('=').length > 1) {
-        acc[cur] = query[0].split('=')[1];
-      }
-      return acc;
-    }, {});
-    if (queries['issue-filter']) {
-      this.setState({ issueFilter: decodeURI(queries['issue-filter']) });
-    }
-    if (queries.location) {
-      if (find(states, ele => ele.USPS === queries.location)) {
-        setUsState(queries.location);
-      }
-      return this.searchHandler({
-        query: queries.location,
-      });
-    }
-  }
-
   componentDidMount() {
     const {
       getInitialEvents,
     } = this.props;
     getInitialEvents()
       .then((returned) => {
-        if (this.state.issueFilter) {
-          this.props.setFilters(this.state.issueFilter);
-          this.setState({ issueFilter: null });
+        if (this.state.personFilter) {
+          this.props.setFilters(this.state.personFilter);
+          this.setState({ personFilter: null });
         } else {
           this.props.setInitialFilters(returned);
         }
@@ -174,24 +142,11 @@ class EventsDashboard extends React.Component {
       filteredEvents,
       searchByQueryString,
       onColorMapUpdate,
+      allEvents,
     } = this.props;
 
-    const searchTypeMapMap = {
-      district: filteredEvents,
-      proximity: visibleEvents,
-    };
-    let items;
-    if (filterBy === 'state') {
-      items = filteredEvents;
-    } else {
-      items = searchTypeMapMap[searchType];
-    }
-
-    if (!mapboxgl.supported()) {
-      return (<WebGlError mapType="event" />);
-    }
     return (<MapView
-      items={items}
+      items={allEvents}
       center={center}
       selectedUsState={selectedUsState}
       colorMap={colorMap}
@@ -225,19 +180,15 @@ class EventsDashboard extends React.Component {
     if (this.state.init) {
       return null;
     }
-    const searchTypeMapSideBar = {
-      district: eventsByDistrict,
-      proximity: visibleEvents,
-    };
-
+    console.log('__dashboard__', allEvents)
     return (
       <div className="events-container main-container">
         <h2 className="dash-title">Event Dashboard</h2>
-        <SearchBar items={searchTypeMapSideBar[searchType]} mapType="event" />
+        <SearchBar items={allEvents} mapType="event" />
         <SideBar
           renderTotal={this.renderTotal}
           colorMap={colorMap}
-          items={searchTypeMapSideBar[searchType]}
+          items={allEvents}
           allItems={allEvents}
           refcode={refcode}
           type="events"

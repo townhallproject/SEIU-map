@@ -1,6 +1,6 @@
 .side-bar-container{
   .group-cell {
-    @include cell($main-dark-blue);
+    @include cell($brand-primary);
     @include montserrat-regular;
     color: black;
   }
