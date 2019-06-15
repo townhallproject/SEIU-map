@@ -5,6 +5,7 @@ import geoViewport from '@mapbox/geo-viewport';
 import {
   find,
   filter,
+  map,
 } from 'lodash';
 import bboxes from '../data/bboxes';
 import Point from '../logics/features';
@@ -13,6 +14,7 @@ import states from '../data/states';
 import L from '../utils/leaflet-ajax/src';
 
 import MapInset from '../components/MapInset';
+import { startSetEvents } from '../state/events/actions';
 
 // Static Dicts
 const responseDict = {
@@ -53,7 +55,6 @@ class MapView extends React.Component {
     this.updateData = this.updateData.bind(this);
     this.getColorForEvents = this.getColorForEvents.bind(this);
     this.focusMap = this.focusMap.bind(this);
-    this.addClusterLayers = this.addClusterLayers.bind(this);
     this.handleReset = this.handleReset.bind(this);
     this.toggleFilters = this.toggleFilters.bind(this);
     this.highlightDistrict = this.highlightDistrict.bind(this);
@@ -213,11 +214,14 @@ class MapView extends React.Component {
       features: [],
       type: 'FeatureCollection',
     };
-    featuresHome.features = items.map((indEvent) => {
-      const colorObject = this.getColorForEvents(indEvent);
+    featuresHome.features = items.reduce((acc, townHall) => {
+      const colorObject = this.getColorForEvents(townHall);
       const newFeature = new Point(colorObject);
-      return newFeature;
-    });
+      if (townHall.lat) {
+        acc.push(newFeature);
+      }
+      return acc;
+    }, []);
     return featuresHome;
   }
 
@@ -344,68 +348,38 @@ class MapView extends React.Component {
     const myIcon = L.icon({
       iconUrl: './assets/campaign.svg',
       iconSize: [24, 24],
-      iconAnchor: [0, -10],
-        // 'base': 1,
-        // 'stops': [
-        //   [0, [0, -15]],
-        //   [10, [0, -10]],
-        //   [12, [0, 0]]
-        // ]
-      
+      iconAnchor: [12, 24],
       popupAnchor: [-3, -76],
     });
+    // Set map controls
+    function showTooltip({ properties }) {
+      const eventInfo = properties;
+      return `<div class="text-info map-popup">
+                <h4 class="mapbox-popup-title">
+                  </span>${eventInfo.displayName}</h4>
+                ${eventInfo.venue ? `<p>${eventInfo.venue}</p>` : ''}
+                <span>
+                  ${eventInfo.repeatingEvent ? `on ${eventInfo.repeatingEvent}` : `${eventInfo.time ? `on ${eventInfo.date} at ${eventInfo.time}` : ''}`}
+                </span><br>
+                  ${eventInfo.addressLink ?
+    `<span><a href="${eventInfo.addressLink}" target="_blank">${eventInfo.address}</a></span>` :
+    `${eventInfo.address ?
+      `<span>${eventInfo.address}</span>` : ''
+    }`}
+                </div>`;
+    }
     L.geoJSON(featuresHome, {
       pointToLayer(geoJsonPoint, latlng) {
         return L.marker(latlng, {
           icon: myIcon,
-        });
+        }).bindTooltip(showTooltip(geoJsonPoint)).openTooltip();
       },
       style(feature) {
         return {
           color: '#f7ed54',
         };
       },
-    }).bindPopup((layer) => layer.feature.properties.events).addTo(this.map);
-  }
-
-  clusterData(featuresHome) {
-    this.map.addSource('groups-points', {
-      cluster: false,
-      data: featuresHome,
-      type: 'geojson',
-    });
-    this.addClusterLayers();
-  }
-
-  addClusterLayers() {
-    this.map.addLayer({
-      filter: ['!has', 'point_count'],
-      id: 'unclustered-point',
-      paint: {
-        'circle-color': '#11b4da',
-        'circle-opacity': 0.5,
-        'circle-radius': 4,
-        'circle-stroke-color': '#fff',
-        'circle-stroke-width': 1,
-      },
-      source: 'groups-points',
-      type: 'circle',
-    });
-
-    // Layer to highlight selected group
-    this.map.addLayer({
-      filter: ['==', 'id', false],
-      id: 'unclustered-point-selected',
-      paint: {
-        'circle-color': '#f00',
-        'circle-opacity': 1,
-        'circle-radius': 6,
-        'circle-stroke-color': '#fff',
-        'circle-stroke-width': 2,
-      },
-      source: 'groups-points',
-      type: 'circle',
-    });
+    }).bindPopup(layer => layer.feature.properties.events).addTo(this.map);
   }
 
   removeHighlights() {
@@ -463,13 +437,13 @@ class MapView extends React.Component {
         weight: 1,
       };
     }
-    var continentalView = function (w, h) {
-        // if (stateCoords) {
-        //   return geoViewport.viewport(stateCoords, [w, h]);
-        // } else {
-          return geoViewport.viewport([-128.8, 23.6, -65.4, 50.2], [w, h]);
+    let continentalView = function (w, h) {
+      // if (stateCoords) {
+      //   return geoViewport.viewport(stateCoords, [w, h]);
+      // } else {
+      return geoViewport.viewport([-128.8, 23.6, -65.4, 50.2], [w, h]);
       // }
-    }
+    };
 
     function setStateStyle(state) {
       return {
@@ -485,18 +459,14 @@ class MapView extends React.Component {
       [24, -128], // Southwest
       [50, -60.885444], // Northeast
     ];
-   var continental = continentalView(window.innerWidth / 2, window.innerHeight / 2);
-    console.log(continental)
+    let continental = continentalView(window.innerWidth / 2, window.innerHeight / 2);
     this.map = L.map('map', {
+      center: [36.900000000000006, -97.10000000000001],
       // attributionControl: false,
       // zoomControl: false,
       zoom: 4,
-      center: [36.900000000000006, -97.10000000000001],
       maxBounds,
-    })
-
-    var mapboxAccessToken = 'pk.eyJ1IjoidG93bmhhbGxwcm9qZWN0IiwiYSI6ImNqMnRwOG4wOTAwMnMycG1yMGZudHFxbWsifQ.FXyPo3-AD46IuWjjsGPJ3Q'
-
+    });
 
 
     function addEventToState(statesGeoJson) {
@@ -507,16 +477,7 @@ class MapView extends React.Component {
       return statesGeoJson;
     }
 
-    // Set map controls
-    function showTooltip(e) {
-      let tooltip =
-          `<div class="tooltip-container"><div class="d-flex justify-content-between"><h4 class="title">${e.feature.properties.DISTRICT}</h4><h4>Position</h4></div>`;
-      tooltip += '<div class="subtitle">HOUSE</div>';
-      // tooltip += makeRow(e.feature.properties.MoCs[0].displayName, e.feature.properties.MoCs[0].crisis_status);
-      tooltip += '<div class="subtitle">SENATE</div>';
-      tooltip += '</div>';
-      return tooltip;
-    }
+
     // this.makeZoomToNationalButton();
     // this.map.dragging.disable();
     // this.map.touchZoom.disable();

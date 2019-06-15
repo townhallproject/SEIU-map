@@ -49,9 +49,9 @@ class TableCell extends React.Component {
           {item.eventName}
         </ul>
         <ul>
-          <li className="semi-bold">{moment(item.starts_at).format('MMMM Do, YYYY')}</li>
-          <li className="semi-bold">{moment(item.starts_at).format('h:mm A')}</li>
-          <li>{item.address1}</li>
+          <li className="semi-bold">{item.date}</li>
+          <li className="semi-bold">{item.time}</li>
+          <li>{item.address}</li>
           <li className="read-more closed" onClick={TableCell.handlePanelOpen} id={item.id}>
             {item.public_description}
           </li>

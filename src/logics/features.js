@@ -1,7 +1,9 @@
 import moment from 'moment';
+import { isNull } from 'util';
 
 class Point {
   constructor(townHall) {
+ 
     this.type = 'Feature';
     this.geometry = {
       coordinates: [Number(townHall.lng), Number(townHall.lat)],
@@ -9,11 +11,14 @@ class Point {
     };
     this.properties = {
       address: townHall.address,
+      addressLink: `https://www.google.com/maps?q=${escape(townHall.address)}`,
+      date: townHall.date || null,
+      displayName: townHall.displayName,
       district: townHall.district,
       icon: townHall.iconFlag,
       id: townHall.id || null,
-      startsAt: townHall.starts_at ? moment(townHall.starts_at).format('MMMM Do YYYY, h:mm a') : '',
       state: townHall.state || null,
+      time: townHall.time || null,
       title: townHall.eventName,
       url: townHall.url || null,
       venue: townHall.Location || '',

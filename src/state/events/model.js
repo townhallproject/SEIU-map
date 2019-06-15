@@ -2,7 +2,8 @@ export default class TownHall {
   constructor(props) {
     this.displayName = props.displayName;
     this.address = props.address;
-    this.starts_at = props.dateString;
+    this.date = props.dateString;
+    this.time = props.Time;
     this.id = props.eventId;
     this.iconFlag = props.iconFlag;
     this.chamber = props.chamber;
@@ -12,6 +13,7 @@ export default class TownHall {
     this.Location = props.Location;
     this.dateObj = props.dateObj;
     this.state = props.state;
+    this.url = props.link;
   }
 
   makeUrl() {
