@@ -5,12 +5,17 @@ import { find } from 'lodash';
 import states from '../data/states';
 import * as selectionActions from '../state/selections/actions';
 
-import { getDistance, getFilters, getLocation, getSearchType } from '../state/selections/selectors';
-import { getColorMap } from '../state/events/selectors';
+import {
+  getDistance,
+  getLocation,
+  getSearchType,
+  getSelectedNames,
+} from '../state/selections/selectors';
+import { getCurrentCandidateNames } from '../state/events/selectors';
 
 import SearchInput from '../components/SearchInput';
 import DistanceFilter from '../components/DistanceSlider';
-
+import CandidateNameFilters from '../components/CandidateNameFilters';
 /* eslint-disable */
 require('style-loader!css-loader!antd/es/radio/style/index.css');
 /* eslint-enable */
@@ -34,23 +39,7 @@ class SearchBar extends React.Component {
     this.onTextChange = this.onTextChange.bind(this);
     this.searchHandler = this.searchHandler.bind(this);
     this.distanceHandler = this.distanceHandler.bind(this);
-  }
-
-  componentWillMount() {
-    const params = ['location'];
-    const queries = params.reduce((acc, cur) => {
-      const query = document.location.search.match(new RegExp(`[?&]${cur}[^&]*`));
-      if (query && query[0].split('=').length > 1) {
-        acc[cur] = query[0].split('=')[1];
-      }
-      return acc;
-    }, {});
-
-    // if (queries.location) {
-    //   return this.searchHandler({
-    //     query: queries.location,
-    //   });
-    // }
+    this.renderFilterBar = this.renderFilterBar.bind(this);
   }
 
   onTextChange(e) {
@@ -60,13 +49,12 @@ class SearchBar extends React.Component {
   searchHandler(value) {
     const { query } = value;
     const {
-      mapType,
       resetSelections,
       resetSearchByZip,
       resetSearchByQueryString,
       searchType,
       searchByZip,
-      searchByQueryString,
+      setUsState,
     } = this.props;
 
     resetSearchByQueryString();
@@ -80,13 +68,8 @@ class SearchBar extends React.Component {
       }
       if (SearchBar.isState(query)) {
         resetSearchByZip();
-        return searchByQueryString({ filterBy: 'state', filterValue: SearchBar.isState(query).USPS });
+        return setUsState(SearchBar.isState(query).USPS);
       }
-      const filterBy = mapType === 'group' ? 'name' : 'title';
-      return searchByQueryString({
-        filterBy,
-        filterValue: query,
-      });
     }
     return resetSelections();
   }
@@ -94,6 +77,27 @@ class SearchBar extends React.Component {
   distanceHandler(value) {
     const { setDistance } = this.props;
     return setDistance(value);
+  }
+
+  renderFilterBar() {
+    const {
+      onFilterChanged,
+      selectedNames,
+      mapType,
+      names,
+    } = this.props;
+    if (mapType === 'group') {
+      return null;
+    }
+    return (
+      <div className="input-group-filters">
+        <CandidateNameFilters
+          names={names}
+          onFilterChanged={onFilterChanged}
+          selectedNames={selectedNames}
+        />
+      </div>
+    );
   }
 
   render() {
@@ -109,57 +113,58 @@ class SearchBar extends React.Component {
           submitHandler={this.searchHandler}
           searchType={searchType}
         />
-        <DistanceFilter
+        {/* <DistanceFilter
           changeHandler={this.distanceHandler}
           distance={distance}
           hidden={searchType === 'district'}
-        />
+        /> */}
+        {this.renderFilterBar()}
       </div>
     );
   }
 }
 
 const mapStateToProps = state => ({
-  colorMap: getColorMap(state),
   distance: getDistance(state),
   location: getLocation(state),
+  names: getCurrentCandidateNames(state),
   searchType: getSearchType(state),
-  selectedFilters: getFilters(state),
+  selectedNames: getSelectedNames(state),
   userSelections: state.selections,
 });
 
 const mapDispatchToProps = dispatch => ({
   changeSearchType: searchType => dispatch(selectionActions.changeSearchType(searchType)),
+  clearUsState: () => dispatch(selectionActions.clearUsState()),
+  onFilterChanged: filters => dispatch(selectionActions.setNameFilter(filters)),
   resetSearchByQueryString: () => dispatch(selectionActions.resetSearchByQueryString()),
   resetSearchByZip: () => dispatch(selectionActions.resetSearchByZip()),
   resetSelections: () => dispatch(selectionActions.resetSelections()),
-  searchByDistrict: district => dispatch(selectionActions.searchByDistrict(district)),
   searchByQueryString: val => dispatch(selectionActions.searchByQueryString(val)),
   searchByZip: zipcode => dispatch(selectionActions.getLatLngFromZip(zipcode)),
   setDistance: distance => dispatch(selectionActions.setDistance(distance)),
   setTextFilter: text => dispatch(selectionActions.setTextFilter(text)),
+  setUsState: usState => dispatch(selectionActions.setUsState(usState)),
 });
 
 SearchBar.propTypes = {
-  colorMap: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   distance: PropTypes.number.isRequired,
   mapType: PropTypes.string.isRequired,
+  names: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onFilterChanged: PropTypes.func.isRequired,
   resetSearchByQueryString: PropTypes.func.isRequired,
   resetSearchByZip: PropTypes.func.isRequired,
   resetSelections: PropTypes.func.isRequired,
-  searchByDistrict: PropTypes.func.isRequired,
-  searchByQueryString: PropTypes.func.isRequired,
   searchByZip: PropTypes.func.isRequired,
   searchType: PropTypes.string,
-  selectedFilters: PropTypes.oneOfType([
-    PropTypes.arrayOf(PropTypes.string),
-    PropTypes.string]).isRequired,
+  selectedNames: PropTypes.arrayOf(PropTypes.string).isRequired,
   setDistance: PropTypes.func.isRequired,
   setTextFilter: PropTypes.func.isRequired,
+  setUsState: PropTypes.func.isRequired,
 };
 
 SearchBar.defaultProps = {
-  searchType: 'proximity'
+  searchType: 'proximity',
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(SearchBar);

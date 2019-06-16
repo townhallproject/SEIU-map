@@ -15,8 +15,4 @@ export default class TownHall {
     this.state = props.state;
     this.url = props.link;
   }
-
-  makeUrl() {
-    return;
-  }
 }

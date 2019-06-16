@@ -16,35 +16,10 @@ import L from '../utils/leaflet-ajax/src';
 import MapInset from '../components/MapInset';
 import { startSetEvents } from '../state/events/actions';
 
-// Static Dicts
-const responseDict = {
-  1: 'Supports Special Counsel Independence and Integrity Act',
-  2: 'Supports Other Action',
-  3: 'Opposes Special Counsel Independence and Integrity Act',
-  4: 'Not on record',
-};
-
-const responseDictPopover = {
-  1: 'supports bill',
-  2: 'for other action(s)',
-  3: 'opposes bill',
-  4: 'unknown',
-};
-
-const responseClass = {
-  1: 'support',
-  2: 'action',
-  3: 'oppose',
-  4: 'unknown',
-};
-
-const mapColors = {
-  1: '#542788',
-  2: '#998ec3',
-  3: '#f1a340',
-  4: '#e3e3e3',
-};
-
+const maxBounds = [
+      [24, -128], // Southwest
+      [50, -60.885444], // Northeast
+    ];
 class MapView extends React.Component {
   constructor(props) {
     super(props);
@@ -53,7 +28,6 @@ class MapView extends React.Component {
     this.addLayer = this.addLayer.bind(this);
     this.createFeatures = this.createFeatures.bind(this);
     this.updateData = this.updateData.bind(this);
-    this.getColorForEvents = this.getColorForEvents.bind(this);
     this.focusMap = this.focusMap.bind(this);
     this.handleReset = this.handleReset.bind(this);
     this.toggleFilters = this.toggleFilters.bind(this);
@@ -81,14 +55,12 @@ class MapView extends React.Component {
     const {
       center,
       items,
-      filterByValue,
       distance,
       selectedItem,
       selectedUsState,
       district,
     } = nextProps;
     this.map.metadata = { searchType: nextProps.searchType };
-
 
     // Highlight selected item
     if (this.props.selectedItem !== selectedItem) {
@@ -100,26 +72,8 @@ class MapView extends React.Component {
       this.filterForStateInsets(items);
     }
 
-    if (filterByValue.state || selectedUsState) {
-      let bbname = selectedUsState || filterByValue.state[0].toUpperCase();
-      if (district) {
-        const zeros = '00';
-        const districtString = district.toString();
-        const districtPadded =
-          zeros.substring(0, zeros.length - districtString.length) +
-          districtString;
-        bbname = `${bbname}${districtPadded}`;
-
-        // highlight district
-        const stateFIPS = states.find(cur => cur.USPS === bbname) ? states.find(cur => cur.USPS === bbname).FIPS : '';
-        const geoID = `${stateFIPS}${districtPadded}`;
-        const selectObj = {
-          district: districtPadded,
-          geoID,
-          state: filterByValue.state[0],
-        };
-        this.districtSelect(selectObj);
-      }
+    if (selectedUsState) {
+      const bbname = selectedUsState.toUpperCase();
       const stateBB = bboxes[bbname];
       return this.focusMap(stateBB);
     }
@@ -127,43 +81,16 @@ class MapView extends React.Component {
       if (this.state.inset === false) {
         return this.map.fitBounds(this.map.getBounds());
       }
-      return this.map.flyTo({
-        center: [Number(center.LNG), Number(center.LAT)],
-        zoom: 9.52 - (distance * (4.7 / 450)),
-      });
+      return this.map.flyTo(
+        {
+          lat: Number(center.LAT),
+          lng: Number(center.LNG),
+        },
+        9.52 - (distance * (4.7 / 450)),
+      );
     }
-    return this.map.fitBounds([[-128.8, 23.6], [-65.4, 50.2]]);
-  }
-
-  getColorForEvents(indEvent) {
-    const {
-      colorMap,
-      onColorMapUpdate,
-    } = this.props;
-    let updatedObj = {};
-    let colorObj = find(colorMap, { filterBy: indEvent.issueFocus });
-    if (colorObj) {
-      updatedObj = { ...indEvent, icon: colorObj.icon };
-    } else {
-      colorObj = find(colorMap, { filterBy: false });
-      if (colorObj) {
-        colorObj.filterBy = indEvent.issueFocus;
-        updatedObj = { ...indEvent, icon: colorObj.icon };
-      } else {
-        colorObj = {
-          color: '#6C9FC2',
-          filterBy: indEvent.issueFocus,
-          icon: 'general',
-        };
-        colorMap.push(colorObj);
-        updatedObj = {
-          ...indEvent,
-          icon: colorObj.icon,
-        };
-      }
-      onColorMapUpdate(colorMap);
-    }
-    return updatedObj;
+    console.log('flying to reset')
+    return this.map.fitBounds(maxBounds);
   }
 
   filterForStateInsets(items) {
@@ -196,17 +123,14 @@ class MapView extends React.Component {
     } else {
       view.zoom -= 0.5;
     }
-    this.map.flyTo(view);
+    this.map.flyTo([view.center[1], view.center[0]], view.zoom);
   }
 
-  updateData(items, layer) {
+  updateData(items) {
     const featuresHome = this.createFeatures(items);
-    this.map.fitBounds([[-128.8, 23.6], [-65.4, 50.2]]);
-    if (!this.map.getSource(layer)) {
-      console.log('no layer');
-      return;
-    }
-    this.map.getSource(layer).setData(featuresHome);
+    // this.map.fitBounds([[-128.8, 23.6], [-65.4, 50.2]]);
+    this.markerLayer.remove();
+    this.addLayer(featuresHome);
   }
 
   createFeatures(items) {
@@ -215,8 +139,7 @@ class MapView extends React.Component {
       type: 'FeatureCollection',
     };
     featuresHome.features = items.reduce((acc, townHall) => {
-      const colorObject = this.getColorForEvents(townHall);
-      const newFeature = new Point(colorObject);
+      const newFeature = new Point(townHall);
       if (townHall.lat) {
         acc.push(newFeature);
       }
@@ -296,7 +219,6 @@ class MapView extends React.Component {
   addClickListener() {
     const {
       type,
-      searchByDistrict,
       setLatLng,
     } = this.props;
     const { map } = this;
@@ -335,10 +257,6 @@ class MapView extends React.Component {
           feature.district = features[0].properties.GEOID.substring(2, 4);
           feature.geoID = features[0].properties.GEOID;
 
-          searchByDistrict({
-            district: Number(feature.district),
-            state: feature.state,
-          });
         }
       }
     });
@@ -368,7 +286,7 @@ class MapView extends React.Component {
     }`}
                 </div>`;
     }
-    L.geoJSON(featuresHome, {
+    this.markerLayer = L.geoJSON(featuresHome, {
       pointToLayer(geoJsonPoint, latlng) {
         return L.marker(latlng, {
           icon: myIcon,
@@ -379,7 +297,8 @@ class MapView extends React.Component {
           color: '#f7ed54',
         };
       },
-    }).bindPopup(layer => layer.feature.properties.events).addTo(this.map);
+    });
+    this.markerLayer.addTo(this.map);
   }
 
   removeHighlights() {
@@ -437,7 +356,7 @@ class MapView extends React.Component {
         weight: 1,
       };
     }
-    let continentalView = function (w, h) {
+    const continentalView = function (w, h) {
       // if (stateCoords) {
       //   return geoViewport.viewport(stateCoords, [w, h]);
       // } else {
@@ -455,17 +374,13 @@ class MapView extends React.Component {
       };
     }
 
-    const maxBounds = [
-      [24, -128], // Southwest
-      [50, -60.885444], // Northeast
-    ];
-    let continental = continentalView(window.innerWidth / 2, window.innerHeight / 2);
+
+    const continental = continentalView(window.innerWidth / 2, window.innerHeight / 2);
     this.map = L.map('map', {
       center: [36.900000000000006, -97.10000000000001],
       // attributionControl: false,
       // zoomControl: false,
       zoom: 4,
-      maxBounds,
     });
 
 
@@ -506,12 +421,9 @@ class MapView extends React.Component {
   render() {
     const {
       center,
-      colorMap,
       district,
       type,
-      filterByValue,
       resetSelections,
-      searchByDistrict,
       refcode,
       setLatLng,
       distance,
@@ -529,12 +441,9 @@ class MapView extends React.Component {
               selectedUsState={selectedUsState}
               center={center}
               stateName="AK"
-              colorMap={colorMap}
               district={district}
               type={type}
-              filterByValue={filterByValue}
               resetSelections={resetSelections}
-              searchByDistrict={searchByDistrict}
               refcode={refcode}
               setLatLng={setLatLng}
               distance={distance}
@@ -548,12 +457,9 @@ class MapView extends React.Component {
               selectedUsState={selectedUsState}
               stateName="HI"
               center={center}
-              colorMap={colorMap}
               district={district}
               type={type}
-              filterByValue={filterByValue}
               resetSelections={resetSelections}
-              searchByDistrict={searchByDistrict}
               refcode={refcode}
               setLatLng={setLatLng}
               distance={distance}
@@ -574,15 +480,11 @@ class MapView extends React.Component {
 
 MapView.propTypes = {
   center: PropTypes.shape({ LAT: PropTypes.string, LNG: PropTypes.string, ZIP: PropTypes.string }),
-  colorMap: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   distance: PropTypes.number,
   district: PropTypes.number,
-  filterByValue: PropTypes.shape({}),
   items: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  onColorMapUpdate: PropTypes.func.isRequired,
   refcode: PropTypes.string,
   resetSelections: PropTypes.func.isRequired,
-  searchByDistrict: PropTypes.func.isRequired,
   searchByQueryString: PropTypes.func.isRequired,
   searchType: PropTypes.string,
   selectedItem: PropTypes.shape({}),
@@ -595,7 +497,6 @@ MapView.defaultProps = {
   center: {},
   distance: 50,
   district: NaN,
-  filterByValue: {},
   refcode: '',
   searchType: 'proximity',
   selectedItem: null,

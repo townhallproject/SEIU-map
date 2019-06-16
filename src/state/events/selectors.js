@@ -1,115 +1,70 @@
-import { filter, includes } from 'lodash';
+import { filter, includes, uniqBy } from 'lodash';
 import { createSelector } from 'reselect';
 import { computeDistanceBetween, LatLng } from 'spherical-geometry-js';
 
 import {
   getDistance,
   getLocation,
-  getFilterBy,
-  getFilterValue,
-  getFilters,
-  getDistrict,
+  getSelectedNames,
   getSelectedState,
 } from '../selections/selectors';
 
 export const getEvents = state => state.events.allEvents;
-export const getColorMap = state => state.events.filterColors;
-export const getCurrentIssueFocuses = state => (['2020 Candidate Event']);
+export const getCurrentCandidateNames = createSelector([getEvents], events => uniqBy(events, 'displayName').map(item => item.displayName));
 
-// const getEventsFilteredByKeywordArray = createSelector(
-//   [getEvents, getFilters],
-//   (allEvents, filterArray) => {
-//     return filter(allEvents, o => includes(filterArray, o.issueFocus));
-//   },
-// );
+export const getEventsFilteredByCandidateArray = createSelector(
+  [getEvents, getSelectedNames],
+  (allEvents, namesToInclude) => {
+    return filter(allEvents, o => includes(namesToInclude, o.displayName));
+  },
+);
 
 const getEventsInState = createSelector(
-  [getEvents, getSelectedState],
-  (allEvents, usState) => {
-    return allEvents
+  [getEventsFilteredByCandidateArray, getSelectedState],
+  (filteredEvents, usState) => {
     if (!usState) {
-      return allEvents;
+      return filteredEvents;
     }
-    return allEvents.filter(currrentEvent => currrentEvent.state === usState);
+    return filteredEvents.filter(currrentEvent => currrentEvent.state === usState);
   },
 );
 
-export const getFilteredEvents = createSelector(
+export const getEventsNearSearchLocation = createSelector(
   [
     getEventsInState,
-    getFilterBy,
-    getFilterValue,
-  ],
-  (
-    eventsInState,
-    filterBy,
-    filterValue,
-  ) => {
-    console.log(eventsInState)
-    return eventsInState;
-    if (!filterValue || filterBy === 'all') {
-      return eventsInState;
-    }
-    return eventsInState.filter((currrentEvent) => {
-      if (!currrentEvent[filterBy]) {
-        return false;
-      }
-      return currrentEvent[filterBy].toLowerCase().includes(filterValue.toLowerCase());
-    }).sort((a, b) => (a.dateObj < b.dateObj ? -1 : 1));
-  },
-);
-
-export const getVisbleEvents = createSelector(
-  [
-    getFilteredEvents,
     getDistance,
     getLocation,
   ],
   (
-    filteredEvents,
+    eventsToShow,
     maxDistance,
     location,
   ) => {
-    return filteredEvents;
     if (!location.LAT) {
-      return filteredEvents;
+      return eventsToShow;
     }
     const lookup = new LatLng(Number(location.LAT), Number(location.LNG));
     const maxMeters = maxDistance * 1609.34; // Convert miles to meters before filtering
-    return filteredEvents.filter((currentEvent) => {
+    return eventsToShow.filter((currentEvent) => {
+      if (!currentEvent.lat) {
+        return false;
+      }
       const curDistance = computeDistanceBetween(
         lookup,
-        new LatLng(Number(currentEvent.latitude), Number(currentEvent.longitude)),
+        new LatLng(Number(currentEvent.lat), Number(currentEvent.lng)),
       );
       return curDistance < maxMeters;
     }).sort((a, b) => {
       const aDistance = computeDistanceBetween(
         lookup,
-        new LatLng(Number(a.latitude), Number(a.longitude)),
+        new LatLng(Number(a.lat), Number(a.lng)),
       );
       const bDistance = computeDistanceBetween(
         lookup,
-        new LatLng(Number(b.latitude), Number(b.longitude)),
+        new LatLng(Number(b.lat), Number(b.lng)),
       );
       return aDistance - bDistance;
     });
   },
 );
 
-export const getEventsByDistrict = createSelector(
-  [
-    getFilteredEvents,
-    getDistrict,
-  ],
-  (
-    filteredEvents,
-    district,
-  ) => {
-    return filteredEvents;
-
-    if (district.toString().length === 0) {
-      return filteredEvents;
-    }
-    return filter(filteredEvents, evnt => evnt.title.includes(`-${district.toString()})`) || evnt.title.includes('Senate'));
-  },
-);

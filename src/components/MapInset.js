@@ -11,7 +11,6 @@ class MapInset extends React.Component {
     this.addLayer = this.addLayer.bind(this);
     this.createFeatures = this.createFeatures.bind(this);
     this.updateData = this.updateData.bind(this);
-    this.getColorForEvents = this.getColorForEvents.bind(this);
     this.addClusterLayers = this.addClusterLayers.bind(this);
     this.handleReset = this.handleReset.bind(this);
     this.toggleFilters = this.toggleFilters.bind(this);
@@ -41,20 +40,6 @@ class MapInset extends React.Component {
     if (this.props.selectedItem !== selectedItem) {
       this.map.setFilter('unclustered-point-selected', ['==', 'id', selectedItem ? selectedItem.id : false]);
     }
-  }
-
-  getColorForEvents(indEvent) {
-    const { colorMap } = this.props;
-    let updatedObj = {};
-    let colorObj = find(colorMap, { filterBy: indEvent.issueFocus });
-    if (colorObj) {
-      updatedObj = { ...indEvent, icon: colorObj.icon };
-    } else {
-      colorObj = find(colorMap, { filterBy: false });
-      colorObj.filterBy = indEvent.issueFocus;
-      updatedObj = { ...indEvent, icon: colorObj.icon };
-    }
-    return updatedObj;
   }
 
   updateData(items, layer) {
@@ -228,10 +213,6 @@ class MapInset extends React.Component {
       stateName,
     } = this.props;
 
-    // mapboxgl.accessToken =
-    //     'pk.eyJ1IjoibWF5YXlhaXIiLCJhIjoiY2phdWl3Y2dnNWM0djJxbzI2M3l6ZHpmNSJ9.m00H0mS_DpchMFMbQ72q2w';
-    // const styleUrl = 'mapbox://styles/mayayair/cjd14wlhs0abt2sp8o10s64el';
-
     this.map = new mapboxgl.Map({
       container: mapId,
       doubleClickZoom: false,
@@ -264,13 +245,12 @@ class MapInset extends React.Component {
 
   render() {
     const {
-      filterByValue,
       center,
       mapId,
       selectedUsState,
     } = this.props;
     const mapClassNames = classNames({
-      hidden: filterByValue.state || center.LAT || filterByValue.title || selectedUsState,
+      hidden: center.LAT || selectedUsState,
       inset: true,
     });
     return (
@@ -284,8 +264,6 @@ class MapInset extends React.Component {
 MapInset.propTypes = {
   bounds: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)).isRequired,
   center: PropTypes.shape({ LAT: PropTypes.string, LNG: PropTypes.string, ZIP: PropTypes.string }),
-  colorMap: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  filterByValue: PropTypes.shape({}),
   items: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   mapId: PropTypes.string.isRequired,
   resetSelections: PropTypes.func.isRequired,
@@ -299,7 +277,6 @@ MapInset.propTypes = {
 
 MapInset.defaultProps = {
   center: {},
-  filterByValue: {},
   searchType: 'proximity',
   selectedItem: null,
   selectedUsState: null,

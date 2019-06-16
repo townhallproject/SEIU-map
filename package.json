@@ -38,7 +38,7 @@
     "reselect": "^3.0.1",
     "resolve-url-loader": "^2.2.0",
     "sass-loader": "^6.0.6",
-    "spherical-geometry-js": "^1.0.1",
+    "spherical-geometry-js": "^1.4.0",
     "style-loader": "^0.20.1",
     "superagent": "^3.8.1"
   },

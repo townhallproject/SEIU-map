@@ -1,9 +1,5 @@
-import moment from 'moment';
-import { isNull } from 'util';
-
 class Point {
   constructor(townHall) {
- 
     this.type = 'Feature';
     this.geometry = {
       coordinates: [Number(townHall.lng), Number(townHall.lat)],

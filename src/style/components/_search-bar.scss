@@ -96,22 +96,6 @@ select {
 }
 .ant-tag-checkable-checked {
   &.town-hall-icon {
-    background-color: $town-hall;
-  }
-
-  &.dark-green {
-    background-color: $dark-green;
-  }
-
-  &.dark-purple {
-    background-color: $dark-purple;
-  }
-
-  &.dark-orange {
-    background-color: $dark-orange;
-  }
-
-  &.circle-stroked-15-grey {
     background-color: $brand-primary;
   }
 }

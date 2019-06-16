@@ -7,11 +7,6 @@ export const setLatLng = payload => ({
   type: 'SET_LAT_LNG',
 });
 
-export const searchByDistrict = payload => ({
-  payload,
-  type: 'SEARCH_BY_DISTRICT',
-});
-
 export const setUsState = payload => ({
   payload,
   type: 'SET_US_STATE',
@@ -57,6 +52,11 @@ export const changeSearchType = payload => ({
 export const setInitialFilters = payload => ({
   payload,
   type: 'SET_INITIAL_FILTERS',
+});
+
+export const setNameFilter = payload => ({
+  payload,
+  type: 'SET_NAME_FILTER',
 });
 
 export const getLatLngFromZip = payload => (dispatch) => {

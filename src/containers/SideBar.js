@@ -6,34 +6,17 @@ import Table from '../components/Table';
 class SideBar extends React.Component {
   constructor(props) {
     super(props);
-    this.renderTable = this.renderTable.bind(this);
     this.renderTotal = this.renderTotal.bind(this);
   }
 
-  renderTable() {
-    const {
-      location,
-      filterBy,
-      type,
-    } = this.props;
-    if ((type === 'groups') && (!location.LAT) && (filterBy === 'all')) {
-      return false;
-    }
-    return true;
-  }
-
   renderTotal() {
-    const { items, renderTotal } = this.props;
-    if (renderTotal) {
-      return renderTotal(items);
-    }
+    const { items } = this.props;
+    return (<p className="event-count">Viewing {items.length} events</p>);
   }
 
   render() {
     const {
-      colorMap,
       items,
-      refcode,
       selectItem,
       type,
     } = this.props;
@@ -41,10 +24,8 @@ class SideBar extends React.Component {
       <div className="side-bar-container">
         {this.renderTotal()}
         <Table
-          colorMap={colorMap}
           items={items}
-          refcode={refcode}
-          shouldRender={this.renderTable()}
+          shouldRender={true}
           type={type}
           selectItem={selectItem}
         />
@@ -54,19 +35,12 @@ class SideBar extends React.Component {
 }
 
 SideBar.propTypes = {
-  allItems: PropTypes.arrayOf(PropTypes.object).isRequired,
-  colorMap: PropTypes.arrayOf(PropTypes.shape({})),
-  filterBy: PropTypes.string.isRequired,
   items: PropTypes.arrayOf(PropTypes.object).isRequired,
-  location: PropTypes.shape({}).isRequired,
-  refcode: PropTypes.string,
   selectItem: PropTypes.func,
   type: PropTypes.string.isRequired,
 };
 
 SideBar.defaultProps = {
-  colorMap: [],
-  refcode: '',
   selectItem: () => {},
 };
 export default SideBar;

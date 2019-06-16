@@ -2,12 +2,9 @@ import { uniqBy } from 'lodash';
 
 const initialState = {
   distance: 50,
-  district: NaN,
-  filterBy: 'all',
-  filterValue: '',
   location: {},
-  refcode: '',
   searchType: 'proximity',
+  selectedNames: [],
   usState: '',
   zipcode: '',
 };
@@ -17,10 +14,8 @@ const userSelectionsReducer = (state = initialState, { type, payload }) => {
     case 'RESET_SELECTIONS':
       return {
         ...state,
-        district: initialState.district,
-        filterBy: initialState.filterBy,
-        filterValue: initialState.filterValue,
         location: initialState.location,
+        usState: initialState.filterValue,
       };
     case 'SET_REFCODE':
       return {
@@ -31,18 +26,6 @@ const userSelectionsReducer = (state = initialState, { type, payload }) => {
       return {
         ...state,
         usState: payload,
-      };
-    case 'SEARCH_BY_DISTRICT':
-      return {
-        ...state,
-        district: payload.district,
-        filterBy: 'state',
-        filterValue: payload.state,
-      };
-    case 'SET_TEXT_FILTER':
-      return {
-        ...state,
-        filterValue: payload,
       };
     case 'SET_DISTANCE':
       return {
@@ -59,28 +42,16 @@ const userSelectionsReducer = (state = initialState, { type, payload }) => {
         ...state,
         location: {},
       };
-    case 'SEARCH_BY_KEY_VALUE':
+    case 'SET_NAME_FILTER':
       return {
         ...state,
-        filterBy: payload.filterBy,
-        filterValue: payload.filterValue,
-      };
-    case 'RESET_SEARCH_BY_KEY_VALUE':
-      return {
-        ...state,
-        filterBy: initialState.filterBy,
-        filterValue: initialState.filterValue,
-      };
-    case 'SET_SEARCH_TYPE':
-      return {
-        ...state,
-        district: initialState.district,
-        searchType: payload,
+        selectedNames: payload,
       };
     case 'SET_INITIAL_FILTERS':
       return {
         ...state,
-        filters: [],
+        selectedNames: uniqBy(payload.events, 'displayName')
+          .map(item => item.displayName),
       };
     default:
       return state;
