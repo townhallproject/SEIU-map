@@ -54,7 +54,9 @@ class TableCell extends React.Component {
             {item.public_description}
           </li>
           <li>
-            <a href={item.url}>{item.urlName}</a>
+            <a href={item.url} target="_blank">
+              {item.urlName}
+            </a>
           </li>
         </ul>
       </Card>
